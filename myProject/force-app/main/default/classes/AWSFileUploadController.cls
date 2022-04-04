@@ -19,8 +19,9 @@ public with sharing class AWSFileUploadController {
         String secret = 'zhoaNfD+A7ABDWMaAaBFWVA8+CoXoD12pckjoSRY'; //AWS Secret key
         String bucketname = 'amazontextractbucket'; //AWS bucket name
         String host = 's3.eu-central-1.amazonaws.com'; //'s3.amazonaws.com:443'
+        // awsexamplebucket1.us-west-1.s3.amazonaws.com
         String method = 'PUT';
-        String endPoint = 'https://' + bucketname + '.' + host + '/'+ filename;
+        //String endPoint = 'https://' + bucketname + '.' + host + '/'+ filename;
         system.debug('filename ' + filename );
         HttpRequest req = new HttpRequest();
         req.setMethod(method);
@@ -31,11 +32,14 @@ public with sharing class AWSFileUploadController {
         req.setHeader('Connection', 'keep-alive');
         req.setHeader('Date', formattedDateString); 
         req.setHeader('ACL', 'public-read-write');
+        String body = EncodingUtil.base64Encode(Blob.valueOf(fileContent));
+        // req.setHeader('Content-Length', String.valueof(body));
         req.setBodyAsBlob(EncodingUtil.base64Decode(fileContent));
-        
-        system.debug('req =' + req.getBody());
-        system.debug('Endpoint='+endPoint);
-
+        system.debug('fileContent size ' + fileContent.length());
+        // req.setHeader('Content-Length', String.valueOf(fileContent.length()));
+        // system.debug('req =' + req.getBody());
+        // system.debug('Endpoint='+endPoint);
+        system.debug('request '+ req.getEndpoint());
         //finally send information to AWS        
         Http http = new Http();
         try {
@@ -48,19 +52,19 @@ public with sharing class AWSFileUploadController {
         if(res.getStatusCode() == 200){
             // insertAttachmentRecord (parentId,strfileName,endPoint);
             HttpRequest request = new HttpRequest();
-            String textractEndpoint = 'https://q80f69uj52.execute-api.eu-central-1.amazonaws.com/default/myFunction2';
-            request.setEndpoint(textractEndpoint);
+            //String textractEndpoint = 'https://tno9rdnt25.execute-api.eu-central-1.amazonaws.com/prod/dynamodbmanager';
+            request.setEndpoint('callout:awsLambda');
             request.setMethod('POST');
-            // request.setHeader('Content-Type', 'application/json;charset=UTF-8');
+            request.setTimeout(120000);
             
             // Set the body as a JSON object
-            string sBody = '{  "key": "' + filename + '" }';
+            string sBody = '{  "filename": "' + filename + '" }';
             request.setBody(sBody);
 
             Http httpLambda = new Http();
             HttpResponse response = httpLambda.send(request);
 
-            System.debug('*Resp:' + String.ValueOF(response.getBody()));
+            System.debug('*Lambda Resp:' + response.getBody());
 
             return true;
         }

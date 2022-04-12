@@ -1,6 +1,7 @@
 {
   "orgName": "avicini company",
   "edition": "Developer",
+  "features": ["DevelopmentWave", "EnableSetPasswordInApi"],
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true

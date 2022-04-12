@@ -2,7 +2,7 @@ public with sharing class AWSFileUploadController {
     
     //This method is used to post file to AWS
     @AuraEnabled
-    public static boolean uploadFileToAWS(Id parentId,
+    public static Map<String,Object> uploadFileToAWS(Id parentId,
                                         String strfileName, String fileType,
                                         String fileContent){
         System.debug('parentId=' + parentId);
@@ -42,49 +42,51 @@ public with sharing class AWSFileUploadController {
         system.debug('request '+ req.getEndpoint());
         //finally send information to AWS        
         Http http = new Http();
+        Map<String, Object> results = new Map<String,Object>();
         try {
-        HTTPResponse res = http.send(req);
-        System.debug('*Resp:' + String.ValueOF(res.getBody()));
-        System.debug('RESPONSE STRING: ' + res.toString());
-        System.debug('RESPONSE STATUS: ' + res.getStatus());
-        System.debug('STATUS_CODE: ' + res.getStatusCode());
+            HTTPResponse res = http.send(req);
+            System.debug('*Resp:' + String.ValueOF(res.getBody()));
+            System.debug('RESPONSE STRING: ' + res.toString());
+            System.debug('RESPONSE STATUS: ' + res.getStatus());
+            System.debug('STATUS_CODE: ' + res.getStatusCode());
 
-        if(res.getStatusCode() == 200){
-            // insertAttachmentRecord (parentId,strfileName,endPoint);
-            HttpRequest request = new HttpRequest();
-            //String textractEndpoint = 'https://tno9rdnt25.execute-api.eu-central-1.amazonaws.com/prod/dynamodbmanager';
-            request.setEndpoint('callout:awsLambda');
-            request.setMethod('POST');
-            request.setTimeout(120000);
-            
-            // Set the body as a JSON object
-            string sBody = '{  "filename": "' + filename + '" }';
-            request.setBody(sBody);
+            if(res.getStatusCode() == 200){
+                // insertAttachmentRecord (parentId,strfileName,endPoint);
+                HttpRequest request = new HttpRequest();
+                //String textractEndpoint = 'https://tno9rdnt25.execute-api.eu-central-1.amazonaws.com/prod/dynamodbmanager';
+                request.setEndpoint('callout:awsLambda');
+                request.setMethod('POST');
+                request.setTimeout(120000);
+                
+                // Set the body as a JSON object
+                string sBody = '{  "filename": "' + filename + '" }';
+                request.setBody(sBody);
 
-            Http httpLambda = new Http();
-            HttpResponse response = httpLambda.send(request);
+                Http httpLambda = new Http();
+                HttpResponse response = httpLambda.send(request);
 
-            System.debug('*Lambda Resp:' + response.getBody());
-
-            return true;
-        }
+                System.debug('*Lambda Resp:' + response.getBody());
+                if (response.getstatuscode() == 200){
+                    results = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
+                    return results;
+                }
+            }
         } catch (DmlException e) {
-        System.debug('The following exception has occurred: ' + e.getMessage());
+            System.debug('The following exception has occurred: ' + e.getMessage());
         }
-       
-
-        
-        return false;
+        // Object o = new Object();
+        // return o;
+        return results;
     }
 
-    //This method inserts file information to Custom Attachment object
-    public static void insertAttachmentRecord (Id parentId, String fileName, String fileURL){
-        Attachment__c attachment = new Attachment__c();
-        attachment.Opportunity__c = parentId;
-        attachment.FileURL__c = fileURL;
-        attachment.File_Name__c =  fileName;
-        insert attachment;                                           
-    }
+    // //This method inserts file information to Custom Attachment object
+    // public static void insertAttachmentRecord (Id parentId, String fileName, String fileURL){
+    //     Attachment__c attachment = new Attachment__c();
+    //     attachment.Opportunity__c = parentId;
+    //     attachment.FileURL__c = fileURL;
+    //     attachment.File_Name__c =  fileName;
+    //     insert attachment;                                           
+    // }
 
     //This method retrieves Attachment record based on OpportunityId
     @AuraEnabled

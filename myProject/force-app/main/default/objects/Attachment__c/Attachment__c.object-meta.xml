@@ -152,16 +152,14 @@
     <enableSearch>false</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
-    <externalSharingModel>ControlledByParent</externalSharingModel>
-    <gender>Masculine</gender>
+    <externalSharingModel>Private</externalSharingModel>
     <label>Attachment</label>
     <nameField>
-        <label>Nome Attachment</label>
+        <label>Attachment Name</label>
         <type>Text</type>
     </nameField>
-    <pluralLabel>Attachment</pluralLabel>
-    <searchLayouts/>
-    <sharingModel>ControlledByParent</sharingModel>
-    <startsWith>Vowel</startsWith>
+    <pluralLabel>Attachments</pluralLabel>
+    <searchLayouts></searchLayouts>
+    <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>
 </CustomObject>

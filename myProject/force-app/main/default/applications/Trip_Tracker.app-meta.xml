@@ -4,13 +4,18 @@
         <headerColor>#0070D2</headerColor>
         <shouldOverrideOrgTheme>false</shouldOverrideOrgTheme>
     </brand>
+    <description>Document your trip to evaluate your carbon footprint</description>
     <formFactors>Small</formFactors>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
     <label>Trip Tracker</label>
     <navType>Standard</navType>
+    <setupExperience>all</setupExperience>
     <tabs>Uploader</tabs>
+    <tabs>standard-AirTravelEnrgyUse</tabs>
+    <tabs>standard-home</tabs>
+    <tabs>Upload2</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>Trip_Tracker_UtilityBar</utilityBar>
 </CustomApplication>

@@ -1,6 +1,7 @@
 import { LightningElement, api, track } from 'lwc';
 import uploadFileToAWS from '@salesforce/apex/AWSFileUploadController.uploadFileToAWS'; 
-import displayUploadedFiles from '@salesforce/apex/AWSFileUploadController.displayUploadedFiles';       
+import displayUploadedFiles from '@salesforce/apex/AWSFileUploadController.displayUploadedFiles';  
+import createRecord from '@salesforce/apex/AirTravelEnergyUseRecordCreator.createRecord';     
 import {ShowToastEvent} from 'lightning/platformShowToastEvent';
 
 export default class fileUploadLWC extends LightningElement {
@@ -9,11 +10,21 @@ export default class fileUploadLWC extends LightningElement {
     @track showSpinner = false; //used for when to show spinner
     @track fileName; //to display the selected file name
     @track tableData; //to display the uploaded file and link to AWS
+    @track showModal = false;
+    @track showNegativeButton;
+    @track showPositiveButton = true;
+    @track positiveButtonLabel = 'Save trip to Net Zero';
+    @track distance;
+    @track startPoint;
+    @track endPoint;
+    @track possibleRoutes;
+
     file; //holding file instance
     myFile;    
     fileType;//holding file type
     fileReaderObj;
     base64FileData;
+    responseData;
     
 
      // get the file name from the user's selection
@@ -77,6 +88,41 @@ export default class fileUploadLWC extends LightningElement {
         }
     }
 
+    closeModal() {
+        this.showModal = false;
+        this.showSpinner = true;
+        createRecord({distance : this.distance}).then(result => {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Success!!',
+                    message: 'Record cretaed successfully!',
+                    variant: 'success',
+                }),
+            );
+            this.showSpinner = false;
+        }).catch(error => {
+            // Error to show during upload
+            window.console.log(error);
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Error in creating record',
+                    message: error.message,
+                    variant: 'error',
+                }),
+            );
+            this.showSpinner = false;
+        });    
+    }
+
+    closeModalNoSave(){
+        this.showModal = false;
+    }
+    
+    showModalPopup() {
+        this.showModal = true;
+        this.showPositiveButton = true;
+    }
+
     //this method calls Apex's controller to upload file in AWS
     fileUpload(){
         
@@ -86,19 +132,18 @@ export default class fileUploadLWC extends LightningElement {
                         fileType: this.file.type,
                         fileContent: this.base64FileData})
         .then(result => {
-            console.log('Upload result = ' +result);            
+            // console.log('Upload result = ' +result); 
+            this.responseData = JSON.parse(result['body']); 
+            this.distance = this.responseData['Distance']
+            this.startPoint = this.responseData['StartPoint']
+            this.endPoint = this.responseData['EndPoint']
+            this.possibleRoutes = this.responseData['Possible routes']
+            // console.log();
+                     
             this.fileName = this.fileName + ' - Uploaded Successfully';
-            //call to show uploaded files
-            this.getUploadedFiles(); 
             this.showSpinner = false;
             // Showing Success message after uploading
-            this.dispatchEvent(
-                new ShowToastEvent({
-                    title: 'Success!!',
-                    message: this.file.name + ' - Uploaded Successfully!!!',
-                    variant: 'success',
-                }),
-            );
+            this.showModalPopup();
         })
         .catch(error => {
             // Error to show during upload
@@ -113,6 +158,9 @@ export default class fileUploadLWC extends LightningElement {
             this.showSpinner = false;
         });        
     }
+
+    
+
 
     //retrieve uploaded file information to display to the user
     getUploadedFiles(){

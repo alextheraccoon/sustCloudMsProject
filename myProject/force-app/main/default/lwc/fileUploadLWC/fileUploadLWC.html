@@ -20,6 +20,23 @@
                 </lightning-button>
             </div>
         </div><br/><br/>
+
+        <c-util-modal 
+            show-modal={showModal} 
+            show-positive={showPositiveButton}
+            positive-button-label={positiveButtonLabel} 
+            show-negative={showNegativeButton}
+            onpositive={closeModal}
+            onclose={closeModalNoSave}>
+            <div slot="header">
+                <h2 slot="header" id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Review your trip:</h2>
+            </div>
+            <div slot="body">
+                Trip from {startPoint} to {endPoint} : {distance} km total.
+            </div>
+        </c-util-modal>
+
+
         <!--displaying uploaded files-->
         <template if:true={tableData}>
             <lightning-card title="Following files uploaded:">

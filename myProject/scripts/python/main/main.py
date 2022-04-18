@@ -55,6 +55,90 @@ def search_value(kvs, search_key):
         if re.search(search_key, key, re.IGNORECASE):
             return value
             
+            
+def GetResultsDocumentDetection(jobId):
+    maxResults = 1000
+    paginationToken = None
+    finished = False
+    allBlocks = []
+    
+    while finished == False:
+        response = None
+        
+        if paginationToken == None:
+            response = client.get_document_text_detection(JobId=jobId,
+                                                                         MaxResults=maxResults)
+        else:
+            response = client.get_document_text_detection(JobId=jobId,
+                                                                 MaxResults=maxResults,
+                                                                 NextToken=paginationToken)
+        # print(response)
+    # pages = []
+    # response = client.get_document_text_detection(JobId=jobId)
+    # pages.append(response)
+    # print("Resultset page recieved: {}".format(len(pages)))
+    # nextToken = None
+    # if('NextToken' in response):
+    #     nextToken = response['NextToken']
+    # while(nextToken):
+    #     response = client.get_document_text_detection(JobId=jobId, NextToken=nextToken)
+    #     pages.append(response)
+    #     print("Resultset page recieved: {}".format(len(pages)))
+    #     nextToken = None
+    #     if('NextToken' in response):
+    #         nextToken = response['NextToken']
+    # # body = ""
+    # for resultPage in pages:
+    #     print(resultPage['Blocks'])
+    #     for item in resultPage['Blocks']:
+        #     allBlocks.append(item)
+        #     if 'Text' in item:
+        #         body += item['Text']
+        #         body += " "
+    # print(body)
+        # Get the text blocks
+        blocks = response['Blocks']
+        print('Detected Document Text')
+        print('Pages: {}'.format(response['DocumentMetadata']['Pages']))
+        
+        for block in blocks:
+            # print(block)
+            allBlocks.append(block)
+            # print("Type: " + block['BlockType'])
+            # print('Page: {}'.format(block['Page']))
+            # if 'Text' in block and block['BlockType'] == "LINE":
+            # #     print("Text: " + block['Text'])
+            #     allBlocks.append(block['Text'])
+            if 'NextToken' in response:
+                paginationToken = response['NextToken']
+            else:
+                finished = True
+                
+        # body = ""
+        # for item in response['Blocks']:
+        #     if 'Text' in item:
+        #         print("Text: " + item['Text'])
+        #         body += item["Text"]
+        #         body += " "
+            
+        # allBlocks.append(body)
+        # if len(allBlocks) == 0:
+        #     allBlocks = response['Blocks']
+        # else:
+        #     for block in response['Blocks']:
+        #         allBlocks.append(block)
+        # # print(type(blocks))
+        # print('Blocks len' + str(len(allBlocks)))
+        
+    #     if 'NextToken' in response:
+    #         print(response['NextToken'])
+    #         paginationToken = response['NextToken']
+    #     else:
+    #         finished = True
+    # for i in allBlocks:
+    #     print(i)
+    return allBlocks
+            
 def GetResultsDocumentAnalysis(jobId):
     maxResults = 1000
     paginationToken = None
@@ -65,25 +149,25 @@ def GetResultsDocumentAnalysis(jobId):
         response = None
         if paginationToken == None:
             response = client.get_document_analysis(JobId=jobId,
-                                                            MaxResults=maxResults)
+                                                           MaxResults=maxResults)
         else:
             response = client.get_document_analysis(JobId=jobId,
-                                                            MaxResults=maxResults,
-                                                            NextToken=paginationToken)
+                                                           MaxResults=maxResults,
+                                                           NextToken=paginationToken)
 
-        # Get the text blocks
-        if len(allBlocks) == 0:
-            allBlocks = response['Blocks']
-        else:
-            for block in response['Blocks']:
-                allBlocks.append(block)
-        # print(type(blocks))
-        print('Blocks len' + str(len(allBlocks)))
-        if 'NextToken' in response:
-            paginationToken = response['NextToken']
-        else:
-            finished = True
-            
+
+            # Get the text blocks
+        blocks = response['Blocks']
+        print('Analyzed Document Text')
+        print('Pages: {}'.format(response['DocumentMetadata']['Pages']))
+        # Display block information
+        for block in blocks:
+            allBlocks.append(block)
+
+            if 'NextToken' in response:
+                paginationToken = response['NextToken']
+            else:
+                finished = True
     return allBlocks
 
 
@@ -141,24 +225,34 @@ def CreateTopicandQueue():
     
     
     
-def asyncAnalysis(roleArn, document, bucket):
+def asyncAnalysis(roleArn, document, bucket, first):
+    print("asyncAnalysis")
     sqsQueueUrl, snsTopicArn = CreateTopicandQueue()
     print('queue and topic created: \n queueUrl: ' + sqsQueueUrl + '\n topicArn: ' + snsTopicArn)
     try:
-        analysis = client.start_document_analysis(
-            DocumentLocation={ 
-            "S3Object": { 
-                "Bucket": bucket,
-                "Name": document,
-            }},
-            FeatureTypes=["TABLES", "FORMS"],
-            NotificationChannel={
-                'SNSTopicArn': snsTopicArn,
-                'RoleArn': 'arn:aws:iam::719767148974:role/service-role/myFunction2-role-0w9hfb77'
-            })
-        jobId = analysis['JobId']
-        print(
-                "Started text analysis job" + jobId + ' on document ' + document)
+        if first == False:
+            print("This is second analysis")
+            analysis = client.start_document_text_detection(
+                DocumentLocation={'S3Object': {'Bucket': bucket, 'Name': document}},
+                NotificationChannel={'RoleArn': roleArn, 'SNSTopicArn': snsTopicArn})
+            print('Processing type: Detection')
+            jobId = analysis['JobId']
+        else:
+            print("This is first analysis")
+            analysis = client.start_document_analysis(
+                DocumentLocation={ 
+                "S3Object": { 
+                    "Bucket": bucket,
+                    "Name": document,
+                }},
+                FeatureTypes=["TABLES", "FORMS"],
+                NotificationChannel={
+                    'SNSTopicArn': snsTopicArn,
+                    'RoleArn': roleArn,               
+                })
+            jobId = analysis['JobId']
+            print(
+                    "Started text analysis job" + jobId + ' on document ' + document)
     except ClientError:
             print("Couldn't analyze text in " + document)
             raise
@@ -192,7 +286,12 @@ def asyncAnalysis(roleArn, document, bucket):
                 if str(textMessage['JobId']) == analysis['JobId']:
                     print('Matching Job Found:' + textMessage['JobId'])
                     jobFound = True
-                    blocks = GetResultsDocumentAnalysis(textMessage['JobId'])
+                    if first == True:
+                        blocks = GetResultsDocumentAnalysis(textMessage['JobId'])
+                    else:
+                        blocks = GetResultsDocumentDetection(textMessage['JobId'])
+                        for i in blocks:
+                            print(i)
                     sqs.delete_message(QueueUrl=sqsQueueUrl,
                                             ReceiptHandle=message['ReceiptHandle'])
                 else:
@@ -204,90 +303,182 @@ def asyncAnalysis(roleArn, document, bucket):
 
 
 def lambda_handler(event, context):
+    #TODO create bucket dynamically
+    roleArn = "arn:aws:iam::719767148974:role/service-role/myFunction2-role-0w9hfb77"
     bucket = "amazontextractbucket"
     document = event['filename']
-    roleArn = 'arn:aws:iam::719767148974:role/service-role/myFunction2-role-0w9hfb77'
+    regionName = "eu-central-1"
    
     format = document.split('.', 1)[1].lower()
     
     if format == 'pdf':
-        blocks = asyncAnalysis(roleArn, document, bucket)
-    else:
-        response = client.analyze_document(
-            Document={'S3Object': {'Bucket': bucket, 'Name': document}},
-            FeatureTypes=["FORMS"])
-        blocks=response['Blocks']
-        
-    ######################### key value analysis ######################
-    #Get the text blocks
-    
-    key_map = {}
-    value_map = {}
-    block_map = {}
-    for block in blocks:
-        block_id = block['Id']
-        block_map[block_id] = block
-        if block['BlockType'] == "KEY_VALUE_SET":
-            if 'KEY' in block['EntityTypes']:
-                key_map[block_id] = block
+        if 'first' in event:
+            input = {
+                "filename" : document,
+                "regionName" : regionName,
+                "bucket": bucket,
+                "roleArn": roleArn,
+                "first" : True
+            }
+            asyncFirstCall = client_lambda.invoke(
+                FunctionName = "arn:aws:lambda:eu-central-1:719767148974:function:asyncAnalysis",
+                InvocationType = "RequestResponse",
+                Payload = json.dumps(input)
+            )
+            payloadAsync = json.load(asyncFirstCall['Payload'])
+            jobId = payloadAsync["jobId"]
+            queueUrl = payloadAsync["queueUrl"]
+            topicArn = payloadAsync["topicArn"]
+            if jobId != None:
+                return {
+                    "statusCode" : 200,
+                    "jobId" : jobId,
+                    "queueUrl": queueUrl,
+                    "topicArn" : topicArn
+                }
             else:
-                value_map[block_id] = block
-    kvs = get_kv_relationship(key_map, value_map, block_map)
-    print(str(json.dumps(kvs)))
-    
+                return {
+                    "statusCode" : 400,
+                    "jobId" : jobId,
+                    "queueUrl": queueUrl,
+                    "topicArn" : topicArn
+                }
+                
+        else:
+            if 'jobId' in event:
+                input = {
+                    "filename" : document,
+                    "regionName" : regionName,
+                    "bucket": bucket,
+                    "roleArn": roleArn,
+                    "jobId" : event["jobId"],
+                    "queueUrl" : event["queueUrl"],
+                    "topicArn" : event["topicArn"]
+                }
+                
+                asyncResponse = client_lambda.invoke(
+                    FunctionName = "arn:aws:lambda:eu-central-1:719767148974:function:asyncAnalysis",
+                    InvocationType = "RequestResponse",
+                    Payload = json.dumps(input)
+                    )
+                payloadAsync = json.load(asyncResponse['Payload'])
+                print("async resp " + json.dumps(payloadAsync))
+                textList = payloadAsync["body"]
+                body = ""
+                for i in textList:
+                    body += i
+                    body += " "
+        
+    else:
+        print("This is image")
+        response = client.detect_document_text(
+                Document={'S3Object': {'Bucket': bucket, 'Name': document}})
+        blocks=response['Blocks']
+        body = ""
+        for item in blocks:
+            if item["BlockType"] == "LINE":
+                body += item["Text"]
+                body += " "
+        
+    # calling lambda to find distance
     input = {
-        "Body" : json.dumps(kvs)
+        "text" : body,
     }
-    
+    print(json.dumps(input))
     distance_response = client_lambda.invoke(
         FunctionName= "arn:aws:lambda:eu-central-1:719767148974:function:findDistance",
         InvocationType = "RequestResponse",
         Payload = json.dumps(input)
-        )
-        
-    res = json.load(distance_response['Payload'])
-    print(res)
+    )
+    second_res = json.load(distance_response["Payload"])
     
-    # Case when no airport codes are found
-    if res['statusCode'] == 400:
-        body = ""
-        response = client.detect_document_text(
-            Document={'S3Object': {'Bucket': bucket, 'Name': document}})
-        blocks=response['Blocks']
-        for item in response["Blocks"]:
-            if item["BlockType"] == "LINE":
-                body += item["Text"]
-                body += " "
-        print(body)
-        input = {
-            "Body" : json.dumps(body)
-        }
-        print(input)
-        distance_response = client_lambda.invoke(
-            FunctionName= "arn:aws:lambda:eu-central-1:719767148974:function:findDistance",
-            InvocationType = "RequestResponse",
-            Payload = json.dumps(input)
-        )
-        second_res = json.load(distance_response['Payload'])
-        print("second res" + json.dumps(second_res))
-        # if second_res['statusCode'] == 200 and len(second_res['Possible routes']) != 0:
-        #     print("multiple routes from second analysis")
-        #     print(second_res['Possible routes'])
-            # TODO
-        
+    if second_res['statusCode'] == 200:
         return {
             'statusCode': 200,
             'body': json.dumps(second_res)
         }
-        
-    # elif res['statusCode'] == 200 and res['Possible routes'] != []:
-    #     print("multiple routes from first analysis")
-    #     print(res['Possible routes'])
     else:
         return {
-            'statusCode': 200,
-            'body': json.dumps(res)
-        }  
+            'statusCode': 400,
+            'body': json.dumps(second_res)
+        }
+        
+        
+    ######################### key value analysis ######################
+    #Get the text blocks
+    
+    # key_map = {}
+    # value_map = {}
+    # block_map = {}
+    # for block in blocks:
+    #     block_id = block['Id']
+    #     block_map[block_id] = block
+    #     if block['BlockType'] == "KEY_VALUE_SET":
+    #         if 'KEY' in block['EntityTypes']:
+    #             key_map[block_id] = block
+    #         else:
+    #             value_map[block_id] = block
+    # kvs = get_kv_relationship(key_map, value_map, block_map)
+    # print(str(json.dumps(kvs)))
+    
+    # # input to distance calculator function
+    # input = {
+    #     "Body" : json.dumps(kvs)
+    # }
+    
+    # #calculate distance
+    # distance_response = client_lambda.invoke(
+    #     FunctionName= "arn:aws:lambda:eu-central-1:719767148974:function:findDistance",
+    #     InvocationType = "RequestResponse",
+    #     Payload = json.dumps(input)
+    #     )
+        
+    # res = json.load(distance_response['Payload'])
+    # print(res)
+    
+    # # Case when no airport codes are found
+    # if res['statusCode'] == 400:
+    #     body = ""
+    #     if format == 'pdf':
+    #         blocks = asyncAnalysis(roleArn, document, bucket, False)
+    #     else:
+    #         response = client.detect_document_text(
+    #             Document={'S3Object': {'Bucket': bucket, 'Name': document}})
+    #         blocks=response['Blocks']
+    #     for item in blocks:
+    #         if item["BlockType"] == "LINE":
+    #             body += item["Text"]
+    #             body += " "
+    #     print(body)
+    #     input = {
+    #         "Body" : json.dumps(body)
+    #     }
+    #     print(input)
+    #     distance_response = client_lambda.invoke(
+    #         FunctionName= "arn:aws:lambda:eu-central-1:719767148974:function:findDistance",
+    #         InvocationType = "RequestResponse",
+    #         Payload = json.dumps(input)
+    #     )
+    #     second_res = json.load(distance_response['Payload'])
+    #     print("second res" + json.dumps(second_res))
+    #     # if second_res['statusCode'] == 200 and len(second_res['Possible routes']) != 0:
+    #     #     print("multiple routes from second analysis")
+    #     #     print(second_res['Possible routes'])
+    #         # TODO
+        
+    #     return {
+    #         'statusCode': 200,
+    #         'body': json.dumps(second_res)
+    #     }
+        
+    # # elif res['statusCode'] == 200 and res['Possible routes'] != []:
+    # #     print("multiple routes from first analysis")
+    # #     print(res['Possible routes'])
+    # else:
+    #     return {
+    #         'statusCode': 200,
+    #         'body': json.dumps(res)
+    #     }  
     
     
     

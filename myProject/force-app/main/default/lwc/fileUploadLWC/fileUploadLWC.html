@@ -31,9 +31,74 @@
             <div slot="header">
                 <h2 slot="header" id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Review your trip:</h2>
             </div>
+
             <div slot="body">
-                Trip from {startPoint} to {endPoint} : {distance} km total.
+                <div>
+                <template if:false={more_options}>
+                    Trip from {startPoint} to {endPoint} : {distance} km total.
+                </template>
+                <template if:true={more_options}>
+                    <div class="slds-m-top_medium slds-m-bottom_x-large">
+                        <h2 class="slds-text-heading_small slds-m-bottom_medium">
+                            Select your departure and destination from the options available:
+                        </h2>
+                        
+                        <div class="buttons-conatiner">
+                            <!-- Simple -->
+                        <div class="slds-p-around_medium lgc-bg">
+                            <div class="slds-m-vertical_medium">
+                                Departure:
+                            </div>
+                            <div class="button-menu">
+                                <lightning-button-menu alternative-text="Show menu" variant="border-filled" onselect={handleOnselectDeparture} title="Departure">
+                                    <template for:each={all_airports} for:item="airport">
+                                        <lightning-menu-item
+                                            label={airport}
+                                            value={airport}
+                                            key={airport}
+                                        >
+                                        </lightning-menu-item>
+                                    </template>
+                                </lightning-button-menu>
+                                <div class="slds-m-vertical_medium">
+                                    <p><span class="slds-text-heading_small">{selectedDepartureValue}</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slds-p-around_medium lgc-bg">
+                            <div class="slds-m-vertical_medium">
+                                Destination:
+                            </div>
+                            <div class="button-menu">
+                                <lightning-button-menu alternative-text="Show menu" variant="border-filled" onselect={handleOnselectDestination} title="Destination">
+                                    <template for:each={all_airports} for:item="airport">
+                                        <lightning-menu-item
+                                            label={airport}
+                                            value={airport}
+                                            key={airport}
+                                        >
+                                        </lightning-menu-item>
+                                    </template>
+                                </lightning-button-menu>
+                                <div class="slds-m-vertical_medium">
+                                    <p><span class="slds-text-heading_small">{selectedDestinationValue}</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        </div>   
+                    </div>
+                </template>
             </div>
+            <div >
+                <h2 class="header">Do you want to add your return trip? </h2>
+                <lightning-input type="checkbox" label="Add return trip" onchange={addReturn}></lightning-input>
+            </div>
+            </div>
+            
+           
+            
         </c-util-modal>
 
 

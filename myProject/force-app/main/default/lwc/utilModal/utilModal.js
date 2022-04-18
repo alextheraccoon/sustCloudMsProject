@@ -6,6 +6,7 @@ export default class UtilModal extends LightningElement {
     @api positiveButtonLabel = 'Save trip to Net Zero';
     @api negativeButtonLabel = 'Cancel';
     @api showModal;
+    
   
     constructor() {
       super();
@@ -25,4 +26,6 @@ export default class UtilModal extends LightningElement {
     handleClose() {
       this.dispatchEvent(new CustomEvent('close'));
     }
+
+    
 }

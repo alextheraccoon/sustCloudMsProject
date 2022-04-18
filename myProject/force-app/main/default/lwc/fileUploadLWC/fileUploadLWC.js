@@ -18,6 +18,9 @@ export default class fileUploadLWC extends LightningElement {
     @track startPoint;
     @track endPoint;
     @track possibleRoutes;
+    @track all_airports = []
+    @track more_options = false;
+    @track returnTrip = false;
 
     file; //holding file instance
     myFile;    
@@ -25,6 +28,20 @@ export default class fileUploadLWC extends LightningElement {
     fileReaderObj;
     base64FileData;
     responseData;
+    selectedDepartureValue = "";
+    selectedDestinationValue = "";
+
+    handleOnselectDeparture(event) {
+        this.selectedDepartureValue = event.detail.value;
+    }
+
+    handleOnselectDestination(event) {
+        this.selectedDestinationValue = event.detail.value;
+    }
+
+    addReturn(event) {
+        if (event.target.checked){this.returnTrip = true;}
+    }
     
 
      // get the file name from the user's selection
@@ -88,9 +105,7 @@ export default class fileUploadLWC extends LightningElement {
         }
     }
 
-    closeModal() {
-        this.showModal = false;
-        this.showSpinner = true;
+    createEnergyUseRecord() {
         createRecord({distance : this.distance}).then(result => {
             this.dispatchEvent(
                 new ShowToastEvent({
@@ -111,7 +126,48 @@ export default class fileUploadLWC extends LightningElement {
                 }),
             );
             this.showSpinner = false;
-        });    
+        });
+
+    }
+
+    closeModal() {
+        
+        // handle multiple choice
+        if (this.selectedDepartureValue != "" && this.selectedDestinationValue != ""){
+            this.showModal = false;
+            this.showSpinner = true;
+            let points = [this.selectedDepartureValue, this.selectedDestinationValue];
+        
+            if (this.more_options == true) {
+
+                for (let i = 0; i < this.possibleRoutes.length ; ++i){
+                    if (JSON.stringify(this.possibleRoutes[i][1]) === JSON.stringify(points)){
+                        this.distance = this.possibleRoutes[i][0]
+                    }
+                }
+            }
+
+            window.console.log("return variable " + this.returnTrip)
+            // add return trip
+            this.createEnergyUseRecord();
+            if (this.returnTrip == true) {
+                this.createEnergyUseRecord();
+            }
+            this.more_options = false;
+            this.selectedDepartureValue = "";
+            this.selectedDestinationValue = "";
+            this.all_airports = [];
+
+        } else {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Please select your departure and destination point',
+                    message: "Could not crate any record",
+                    variant: 'error',
+                }),
+            );
+        }
+        
     }
 
     closeModalNoSave(){
@@ -132,14 +188,39 @@ export default class fileUploadLWC extends LightningElement {
                         fileType: this.file.type,
                         fileContent: this.base64FileData})
         .then(result => {
-            // console.log('Upload result = ' +result); 
+            console.log('Upload result = ' +result); 
             this.responseData = JSON.parse(result['body']); 
+            window.console.log(this.responseData)
             this.distance = this.responseData['Distance']
             this.startPoint = this.responseData['StartPoint']
             this.endPoint = this.responseData['EndPoint']
-            this.possibleRoutes = this.responseData['Possible routes']
+            this.possibleRoutes = this.responseData['PossibleRoutes']
             // console.log();
-                     
+            if (this.responseData['PossibleRoutes'].length > 0){
+                this.more_options = true
+            }
+            // here handle the possible routes
+            window.console.log(this.possibleRoutes)
+
+            window.console.log(this.responseData['PossibleRoutes'])
+            window.console.log(this.responseData['StartPoint'])
+
+            // let all_airports = []
+
+            for (let i = 0; i < this.responseData['PossibleRoutes'].length; ++i) {
+                let airports = this.responseData['PossibleRoutes'][i][1]
+                if (this.all_airports.includes(airports[0]) == false) {
+                    this.all_airports.push(airports[0])
+                }
+                if (this.all_airports.includes(airports[1]) == false) {
+                    this.all_airports.push(airports[1])
+                }
+            }
+            
+
+            window.console.log(this.all_airports)
+
+
             this.fileName = this.fileName + ' - Uploaded Successfully';
             this.showSpinner = false;
             // Showing Success message after uploading

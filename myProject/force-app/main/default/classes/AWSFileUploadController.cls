@@ -25,6 +25,7 @@ public with sharing class AWSFileUploadController {
         system.debug('filename ' + filename );
         HttpRequest req = new HttpRequest();
         req.setMethod(method);
+        req.setTimeout(120000);
         req.setEndpoint('callout:amazonTextract'+ '/' + filename);
         req.setHeader('Host', bucketname + '.' + host);
         req.setHeader('Content-Encoding', 'UTF-8');
@@ -57,19 +58,75 @@ public with sharing class AWSFileUploadController {
                 request.setEndpoint('callout:awsLambda');
                 request.setMethod('POST');
                 request.setTimeout(120000);
-                
-                // Set the body as a JSON object
-                string sBody = '{  "filename": "' + filename + '" }';
-                request.setBody(sBody);
 
-                Http httpLambda = new Http();
-                HttpResponse response = httpLambda.send(request);
+                String[] tokens = filename.split('\\.(?=[^\\.]+$)');
+                String format = tokens[1];
+                Boolean isFirst = true;
 
-                System.debug('*Lambda Resp:' + response.getBody());
-                if (response.getstatuscode() == 200){
-                    results = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
-                    return results;
+                if (format.toLowerCase() == 'pdf'){
+                    string sBody = '{  "filename": "' + filename + '", "first": "' + isFirst + '" }';
+                    request.setBody(sBody);
+
+                    Http httpLambda = new Http();
+                    HttpResponse firstResponse = httpLambda.send(request);
+
+                    System.debug('*Lambda Resp:' + firstResponse.getBody());
+                    
+                    if (firstResponse.getstatuscode() == 200){
+                        HttpRequest sec_request = new HttpRequest();
+                        //String textractEndpoint = 'https://tno9rdnt25.execute-api.eu-central-1.amazonaws.com/prod/dynamodbmanager';
+                        sec_request.setEndpoint('callout:awsLambda');
+                        sec_request.setMethod('POST');
+                        sec_request.setTimeout(120000);
+                        JSONParser parser = JSON.createParser(firstResponse.getBody());
+                        // Advance to the start object marker, parse the string response object
+                        parser.nextToken();
+                        parser.nextValue();
+                        parser.nextToken();
+                        parser.nextValue();
+                        String id = parser.getText();
+                        parser.nextToken();
+                        parser.nextValue();
+                        String queue = parser.getText();
+                        parser.nextToken();
+                        parser.nextValue();
+                        String topic = parser.getText();
+                        String new_body = '{  "filename": "' + filename + '", "jobId": "' + id + '", "queueUrl": "'+ queue + '", "topicArn" : "' + topic +'" }';
+                        sec_request.setBody(new_body);
+                        Http httpLambda2 = new Http();
+                        Long startingTime = System.now().getTime(); // Num milliseconds since Jan 1 1970
+                        Integer delayInMilliseconds = 5000; // One-second delay
+                        while (System.now().getTime() - startingTime < delayInMilliseconds)  {
+                                    // Do nothing until desired delay has passed
+                        }
+                        String timeoutResponse = '{"message": "Endpoint request timed out"}';
+                        HttpResponse response = httpLambda2.send(sec_request);
+                        System.debug('second Lambda Resp:' + response.getBody());
+                        if (response.getstatuscode() == 200){
+                            results = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
+                            return results;
+                        }
+                    }
+                    
+
+                } else {
+                    // Set the body as a JSON object
+                    string sBody = '{  "filename": "' + filename + '" }';
+                    request.setBody(sBody);
+
+                    Http httpLambda = new Http();
+                    HttpResponse response = httpLambda.send(request);
+
+                    System.debug('*Lambda Resp:' + response.getBody());
+                    if (response.getstatuscode() == 200){
+                        results = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
+                        return results;
+                    }
+
                 }
+
+                
+                
             }
         } catch (DmlException e) {
             System.debug('The following exception has occurred: ' + e.getMessage());

@@ -1,0 +1,18 @@
+.lgc-bg {
+    background-color: rgb(242, 242, 242);
+}
+
+.lgc-bg-inverse {
+    background-color: rgb(22, 50, 92);
+}
+
+.button-menu {
+    align-items: center;
+    display: flex;
+    align-items: flex-start;
+}
+
+.buttons-container {
+    display: flex;
+    align-items: center;
+}

@@ -13,10 +13,14 @@ public with sharing class AWSFileUploadController {
         Blob contentBlob = EncodingUtil.base64Decode(fileContent);
         String formattedDateString = Datetime.now().formatGMT('EEE, dd MMM yyyy HH:mm:ss z');
         String dateString = Datetime.now().format('ddMMYYYYHHmmss');        
-        String filename = strfileName.deleteWhitespace();        
+        String filename = strfileName.deleteWhitespace(); 
+        String[] tokens = filename.split('\\.(?=[^\\.]+$)');
+        String name = tokens[0].replaceAll('[^a-zA-Z0-9\\s+]', '');
+        String format = tokens[1];
+        filename = name + '.' + format;      
         //AWS specific information
-        String key = 'AKIA2PFLXDGXCWQQXBEK'; //AWS key
-        String secret = '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'; //AWS Secret key
+        // String key = 'AKIA2PFLXDGXCWQQXBEK'; //AWS key
+        // String secret = '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'; //AWS Secret key
         String bucketname = 'amazontextractbucket'; //AWS bucket name
         String host = 's3.eu-central-1.amazonaws.com'; //'s3.amazonaws.com:443'
         // awsexamplebucket1.us-west-1.s3.amazonaws.com
@@ -59,8 +63,8 @@ public with sharing class AWSFileUploadController {
                 request.setMethod('POST');
                 request.setTimeout(120000);
 
-                String[] tokens = filename.split('\\.(?=[^\\.]+$)');
-                String format = tokens[1];
+                // String[] tokens = filename.split('\\.(?=[^\\.]+$)');
+                // String format = tokens[1];
                 Boolean isFirst = true;
 
                 if (format.toLowerCase() == 'pdf'){
@@ -97,7 +101,7 @@ public with sharing class AWSFileUploadController {
                         Long startingTime = System.now().getTime(); // Num milliseconds since Jan 1 1970
                         Integer delayInMilliseconds = 5000; // One-second delay
                         while (System.now().getTime() - startingTime < delayInMilliseconds)  {
-                                    // Do nothing until desired delay has passed
+                             // Do nothing until desired delay has passed
                         }
                         String timeoutResponse = '{"message": "Endpoint request timed out"}';
                         HttpResponse response = httpLambda2.send(sec_request);

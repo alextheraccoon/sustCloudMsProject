@@ -15,8 +15,8 @@ export default class fileUploadLWC extends LightningElement {
     @track showPositiveButton = true;
     @track positiveButtonLabel = 'Save trip to Net Zero';
     @track distance;
-    @track startPoint;
-    @track endPoint;
+    @track startPoint = "";
+    @track endPoint = "";
     @track possibleRoutes;
     @track all_airports = []
     @track more_options = false;
@@ -131,41 +131,60 @@ export default class fileUploadLWC extends LightningElement {
     }
 
     closeModal() {
-        
-        // handle multiple choice
-        if (this.selectedDepartureValue != "" && this.selectedDestinationValue != ""){
-            this.showModal = false;
-            this.showSpinner = true;
-            let points = [this.selectedDepartureValue, this.selectedDestinationValue];
-        
-            if (this.more_options == true) {
+        this.showModal = false;
+        this.showSpinner = true;
+        if (this.more_options == true) {
+            // handle multiple choice
+            if (this.selectedDepartureValue != "" && this.selectedDestinationValue != ""){
+                
+                let points = [this.selectedDepartureValue, this.selectedDestinationValue];
+            
+                if (this.more_options == true) {
 
-                for (let i = 0; i < this.possibleRoutes.length ; ++i){
-                    if (JSON.stringify(this.possibleRoutes[i][1]) === JSON.stringify(points)){
-                        this.distance = this.possibleRoutes[i][0]
+                    for (let i = 0; i < this.possibleRoutes.length ; ++i){
+                        if (JSON.stringify(this.possibleRoutes[i][1]) === JSON.stringify(points)){
+                            this.distance = this.possibleRoutes[i][0]
+                        }
                     }
                 }
-            }
 
-            window.console.log("return variable " + this.returnTrip)
-            // add return trip
-            this.createEnergyUseRecord();
-            if (this.returnTrip == true) {
+                window.console.log("return variable " + this.returnTrip)
+                // add return trip
                 this.createEnergyUseRecord();
-            }
-            this.more_options = false;
-            this.selectedDepartureValue = "";
-            this.selectedDestinationValue = "";
-            this.all_airports = [];
+                if (this.returnTrip == true) {
+                    this.createEnergyUseRecord();
+                }
+                this.more_options = false;
+                this.selectedDepartureValue = "";
+                this.selectedDestinationValue = "";
+                this.all_airports = [];
 
+            } else {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Please select your departure and destination point',
+                        message: "Could not crate any record",
+                        variant: 'error',
+                    }),
+                );
+            }
         } else {
-            this.dispatchEvent(
-                new ShowToastEvent({
-                    title: 'Please select your departure and destination point',
-                    message: "Could not crate any record",
-                    variant: 'error',
-                }),
-            );
+            if (this.startPoint != "" && this.endPoint != ""){
+                // add return trip
+                this.createEnergyUseRecord();
+                if (this.returnTrip == true) {
+                    this.createEnergyUseRecord();
+                }
+            } else {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Could not recognize any start or end point',
+                        message: "Could not crate any record",
+                        variant: 'error',
+                    }),
+                );
+
+            }
         }
         
     }
@@ -198,25 +217,21 @@ export default class fileUploadLWC extends LightningElement {
             // console.log();
             if (this.responseData['PossibleRoutes'].length > 0){
                 this.more_options = true
-            }
-            // here handle the possible routes
-            window.console.log(this.possibleRoutes)
+                // here handle the possible routes
+                window.console.log(this.possibleRoutes)
 
-            window.console.log(this.responseData['PossibleRoutes'])
-            window.console.log(this.responseData['StartPoint'])
-
-            // let all_airports = []
-
-            for (let i = 0; i < this.responseData['PossibleRoutes'].length; ++i) {
-                let airports = this.responseData['PossibleRoutes'][i][1]
-                if (this.all_airports.includes(airports[0]) == false) {
-                    this.all_airports.push(airports[0])
-                }
-                if (this.all_airports.includes(airports[1]) == false) {
-                    this.all_airports.push(airports[1])
+                window.console.log(this.responseData['PossibleRoutes'])
+                window.console.log(this.responseData['StartPoint'])
+                for (let i = 0; i < this.responseData['PossibleRoutes'].length; ++i) {
+                    let airports = this.responseData['PossibleRoutes'][i][1]
+                    if (this.all_airports.includes(airports[0]) == false) {
+                        this.all_airports.push(airports[0])
+                    }
+                    if (this.all_airports.includes(airports[1]) == false) {
+                        this.all_airports.push(airports[1])
+                    }
                 }
             }
-            
 
             window.console.log(this.all_airports)
 

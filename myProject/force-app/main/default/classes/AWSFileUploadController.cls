@@ -112,7 +112,6 @@ public with sharing class AWSFileUploadController {
                         }
                     }
                     
-
                 } else {
                     // Set the body as a JSON object
                     string sBody = '{  "filename": "' + filename + '" }';

@@ -1,5 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
 import uploadFileToAWS from '@salesforce/apex/AWSFileUploadController.uploadFileToAWS'; 
+import checkRegion from '@salesforce/apex/IsSameRegion.checkRegion';
 import displayUploadedFiles from '@salesforce/apex/AWSFileUploadController.displayUploadedFiles';  
 import createRecord from '@salesforce/apex/AirTravelEnergyUseRecordCreator.createRecord';     
 import {ShowToastEvent} from 'lightning/platformShowToastEvent';
@@ -21,6 +22,7 @@ export default class fileUploadLWC extends LightningElement {
     @track all_airports = []
     @track more_options = false;
     @track returnTrip = false;
+    @track analyzedAirports = [];
 
     file; //holding file instance
     myFile;    
@@ -30,6 +32,7 @@ export default class fileUploadLWC extends LightningElement {
     responseData;
     selectedDepartureValue = "";
     selectedDestinationValue = "";
+    
 
     handleOnselectDeparture(event) {
         this.selectedDepartureValue = event.detail.value;
@@ -231,15 +234,29 @@ export default class fileUploadLWC extends LightningElement {
                         this.all_airports.push(airports[1])
                     }
                 }
+                window.console.log(this.all_airports)
+                // index the list based on region
+                checkRegion({locations: this.all_airports}).then(result => {
+                    console.log('analysis result = ' +result); 
+                    let locs = result['locations']; 
+                    for (let i = 0; i < locs.length; ++i) {
+                        if (locs[i][1] == true && this.analyzedAirports.includes(locs[i][0]) == false) {
+                            this.analyzedAirports.push(locs[i][0])
+                        }
+                    }
+                    for (let i = 0; i < locs.length; ++i) {
+                        if (this.analyzedAirports.includes(locs[i][0]) == false ) {
+                            this.analyzedAirports.push(locs[i][0])
+                        }
+                    }
+                    this.fileName = this.fileName + ' - Uploaded Successfully';
+                    this.showSpinner = false;
+                    // Showing Success message after uploading
+                    this.showModalPopup();
+                })
+
             }
-
-            window.console.log(this.all_airports)
-
-
-            this.fileName = this.fileName + ' - Uploaded Successfully';
-            this.showSpinner = false;
-            // Showing Success message after uploading
-            this.showModalPopup();
+            
         })
         .catch(error => {
             // Error to show during upload

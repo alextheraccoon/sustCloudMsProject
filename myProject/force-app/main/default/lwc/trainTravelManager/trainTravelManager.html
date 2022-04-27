@@ -1,0 +1,25 @@
+<template>
+    <lightning-card  variant="Narrow"  title="Train Travel Manager" icon-name="custom:custom14"  style="width:30rem">
+        <div style="margin-left:5%">
+            <p class="slds-p-horizontal_small">Report here your train business travel</p>
+            <p style="height: 20px;">  </p>
+            <div class="cost-input">
+            <p>How much did it cost: </p>
+            <div class="input-container">
+                <lightning-input type="number" value="0.0" formatter="currency" step="0.01" onchange={handleInputChange}></lightning-input>
+            </div>
+            
+            </div>
+            <template if:true={showSpinner}>
+                <lightning-spinner alternative-text="Creating the record..." size="medium">                        
+                    </lightning-spinner>
+            </template>
+            <p style="height: 20px;">  </p>
+            <lightning-button label="Submit" title="Submit information" onclick={handleClick} class="slds-m-top--medium" variant="brand">
+            </lightning-button>
+
+        </div>
+        
+    </lightning-card>
+    
+</template>

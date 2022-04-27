@@ -1,5 +1,5 @@
 .lgc-bg {
-    background-color: rgb(242, 242, 242);
+   
 }
 
 .lgc-bg-inverse {
@@ -9,10 +9,38 @@
 .button-menu {
     align-items: center;
     display: flex;
-    align-items: flex-start;
+    font-size: 1rem;
+    line-height: 1.25;
+    margin: 0px;
+    width: 500px;
+    padding: 10px;
+    border-color: rgb(169, 165, 165);
+    
+}
+
+.dropdown{
+    max-height: 200px;
+}
+
+.dropdown-value {
+    padding-left: 10px;
+    font-size: 1rem;
+    line-height: 1.25;
 }
 
 .buttons-container {
     display: flex;
     align-items: center;
+}
+
+.modal-value {
+    font-size: 1rem;
+    line-height: 1.25;
+    color: rgb(27, 26, 26);
+    margin-left: 20px;
+}
+
+.modal-text {
+    color: rgb(27, 26, 26);
+    font-size: 1rem;
 }

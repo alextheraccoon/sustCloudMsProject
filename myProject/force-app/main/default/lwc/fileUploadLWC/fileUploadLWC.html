@@ -1,7 +1,7 @@
 <template>
     <article class="slds-tile">
     <!-- file upload section -->
-    <lightning-card variant="Narrow" title="Lightning Web Component File Uploader for AWS" 
+    <lightning-card variant="Narrow" title="Air Travel Manager" 
             style="width:30rem"    icon-name="custom:custom14"> 
         <div style="margin-left:5%">
             <div>
@@ -35,7 +35,19 @@
             <div slot="body">
                 <div>
                 <template if:false={more_options}>
-                    Trip from {startPoint} to {endPoint} : {distance} km total.
+                    <div class="key-value-recap">
+                        <p class="modal-text"> Trip from:  </p>
+                        <p><span class="modal-value"><b>{startPoint}</b></span></p> 
+                        <p class="modal-text"> to: </p>
+                        <p><span class="modal-value"><b>{endPoint}</b></span></p> 
+                        <p style="height: 20px;">  </p>
+                        <p>
+                            <span class="modal-text">Distance: </span> 
+                            <b><lightning-formatted-number value={distance} maximum-fraction-digits="2" class="modal-value"></lightning-formatted-number></b>
+                            <span class="modal-text"> km total</span>
+                        </p> 
+                        <p style="height: 20px;">  </p>
+                    </div>
                 </template>
                 <template if:true={more_options}>
                     <div class="slds-m-top_medium slds-m-bottom_x-large">
@@ -46,42 +58,50 @@
                         <div class="buttons-conatiner">
                             <!-- Simple -->
                         <div class="slds-p-around_medium lgc-bg">
-                            <div class="slds-m-vertical_medium">
+                            <div class="modal-text">
                                 Departure:
                             </div>
-                            <div class="button-menu">
-                                <lightning-button-menu alternative-text="Show menu" variant="border-filled" onselect={handleOnselectDeparture} title="Departure">
-                                    <template for:each={all_airports} for:item="airport">
-                                        <lightning-menu-item
-                                            label={airport}
-                                            value={airport}
-                                            key={airport}
-                                        >
-                                        </lightning-menu-item>
-                                    </template>
+                            <div class="button-menu slds-box">
+                                <lightning-button-menu alternative-text="Show menu" variant="border-filled" onselect={handleOnselectDeparture} title="Departure" >
+                                    <div class="dropdown">
+                                        <template for:each={analyzedAirports} for:item="airport" >
+                                        
+                                            <lightning-menu-item
+                                                label={airport}
+                                                value={airport}
+                                                key={airport}
+                                            >
+                                            </lightning-menu-item>
+                                        </template>
+
+                                    </div>
+                                    
                                 </lightning-button-menu>
-                                <div class="slds-m-vertical_medium">
+                                <div class="dropdown-value slds-truncate">
                                     <p><span class="slds-text-heading_small">{selectedDepartureValue}</span></p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="slds-p-around_medium lgc-bg">
-                            <div class="slds-m-vertical_medium">
+                            <div class="modal-text">
                                 Destination:
                             </div>
-                            <div class="button-menu">
+                            <div class="button-menu slds-box">
                                 <lightning-button-menu alternative-text="Show menu" variant="border-filled" onselect={handleOnselectDestination} title="Destination">
-                                    <template for:each={all_airports} for:item="airport">
-                                        <lightning-menu-item
-                                            label={airport}
-                                            value={airport}
-                                            key={airport}
-                                        >
-                                        </lightning-menu-item>
-                                    </template>
+                                    <div class="dropdown">
+                                        <template for:each={analyzedAirports} for:item="airport" >
+                                            <lightning-menu-item
+                                                label={airport}
+                                                value={airport}
+                                                key={airport}
+                                            >
+                                            </lightning-menu-item>
+                                        </template>
+                                    </div>
+                                    
                                 </lightning-button-menu>
-                                <div class="slds-m-vertical_medium">
+                                <div class="dropdown-value slds-truncate">
                                     <p><span class="slds-text-heading_small">{selectedDestinationValue}</span></p>
                                 </div>
                             </div>
@@ -96,8 +116,6 @@
                 <lightning-input type="checkbox" label="Add return trip" onchange={addReturn}></lightning-input>
             </div>
             </div>
-            
-           
             
         </c-util-modal>
 

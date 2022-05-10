@@ -73,7 +73,7 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>runtime_sales_activities:todayTaskContainer</componentName>
+                <componentName>trainTravelManager</componentName>
             </componentInstance>
         </itemInstances>
         <itemInstances>

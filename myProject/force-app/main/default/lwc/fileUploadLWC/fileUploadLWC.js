@@ -161,6 +161,7 @@ export default class fileUploadLWC extends LightningElement {
                 this.selectedDepartureValue = "";
                 this.selectedDestinationValue = "";
                 this.all_airports = [];
+                this.analyzedAirports = [];
 
             } else {
                 this.dispatchEvent(
@@ -186,14 +187,17 @@ export default class fileUploadLWC extends LightningElement {
                         variant: 'error',
                     }),
                 );
-
             }
         }
-        
     }
 
     closeModalNoSave(){
         this.showModal = false;
+        this.more_options = false;
+        this.selectedDepartureValue = "";
+        this.selectedDestinationValue = "";
+        this.all_airports = [];
+        this.analyzedAirports = [];
     }
     
     showModalPopup() {
@@ -253,8 +257,24 @@ export default class fileUploadLWC extends LightningElement {
                     this.showSpinner = false;
                     // Showing Success message after uploading
                     this.showModalPopup();
-                })
+                }).catch(error => {
+                    // Error to show during upload
+                    window.console.log(error);
+                    this.dispatchEvent(
+                        new ShowToastEvent({
+                            title: 'There has been an error, please try again',
+                            message: error.message,
+                            variant: 'error',
+                        }),
+                    );
+                    this.showSpinner = false;
+                });
 
+            } else {
+                this.fileName = this.fileName + ' - Uploaded Successfully';
+                this.showSpinner = false;
+                // Showing Success message after uploading
+                this.showModalPopup();
             }
             
         })
@@ -263,7 +283,7 @@ export default class fileUploadLWC extends LightningElement {
             window.console.log(error);
             this.dispatchEvent(
                 new ShowToastEvent({
-                    title: 'Error in uploading File',
+                    title: 'Error in reading the File',
                     message: error.message,
                     variant: 'error',
                 }),
@@ -273,8 +293,6 @@ export default class fileUploadLWC extends LightningElement {
     }
 
     
-
-
     //retrieve uploaded file information to display to the user
     getUploadedFiles(){
         displayUploadedFiles({parentId: this.recordId})

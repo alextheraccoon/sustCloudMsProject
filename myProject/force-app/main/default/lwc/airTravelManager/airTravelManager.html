@@ -1,0 +1,57 @@
+<template>
+    <lightning-card  variant="Narrow"  title="Air Travel Manager" icon-name="custom:custom14"  style="width:30rem">
+        <div style="margin-left:5%">
+            <p class="slds-p-horizontal_small">Don't have a boarding pass? Choose here your travel departure and destination</p>
+            <p style="height: 20px;">  </p>
+            <template if:true={showSpinner}>
+                <lightning-spinner alternative-text="Creating the record..." size="medium">                        
+                    </lightning-spinner>
+            </template>
+            <p style="height: 20px;">  </p>
+            <lightning-button label="Report your travel" title="Submit information" onclick={showModalPopup} class="slds-m-top--medium" variant="brand">
+            </lightning-button>
+
+        </div>
+    
+        <c-util-modal 
+        show-modal={showModal} 
+        show-positive={showPositiveButton}
+        positive-button-label={positiveButtonLabel} 
+        show-negative={showNegativeButton}
+        onpositive={closeModal}
+        onclose={closeModalNoSave}>
+        <div slot="header">
+            <h2 slot="header" id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Define your trip:</h2>
+        </div>
+        <div slot="body">
+            <div class="trip_definition">
+                    <div class="airports_selection">
+                        <div class="dropdown">
+                            <lightning-input  type="search" label="Search Departure Airport Name" onchange={searchDeparture} value={dep_airportName} ></lightning-input>
+                            <select class="slds-select" onchange={handleGetSelectedDeparture}>
+                                <template for:each={airportList_dep} for:item="accObj" for:index="index">
+                                    <option key={accObj.Id} class="uiInputSelectOption">{accObj.Name}</option>
+                                </template>
+                            </select>
+                        </div>
+                        <p style="height: 20px;">  </p>
+                        <div class="dropdown">
+                            <lightning-input  type="search" label="Search Arrival Airport Name" onchange={searchArrival} value={arr_airportName} ></lightning-input>
+                            <select class="slds-select" onchange={handleGetSelectedArrival}>
+                                <template for:each={airportList_arr} for:item="accObj" for:index="index">
+                                    <option key={accObj.Id} class="uiInputSelectOption">{accObj.Name}</option>
+                                </template>
+                            </select>
+                        </div>
+                        <p style="height: 20px;">  </p>
+                    </div>
+                    <div >
+                        <h2 class="header">Do you want to add your return trip? </h2>
+                        <lightning-input type="checkbox" label="Add return trip" onchange={addReturn}></lightning-input>
+                    </div>
+            </div>
+        </div>
+        </c-util-modal>
+</lightning-card>
+    
+</template>

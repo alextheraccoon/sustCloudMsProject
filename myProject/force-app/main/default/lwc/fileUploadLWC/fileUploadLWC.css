@@ -44,3 +44,12 @@
     color: rgb(27, 26, 26);
     font-size: 1rem;
 }
+
+.wrong-trip {
+    display: column;
+    align-items: center;
+}
+
+.airports_selection {
+    max-width: 50%;
+}

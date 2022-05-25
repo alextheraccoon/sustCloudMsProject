@@ -9,6 +9,7 @@ public with sharing class AirTravelEnergyUseRecordCreator {
             ateu.SegmentDistance = Decimal.valueOf(distance);
             ateu.StartDate = system.today();
             ateu.EndDate = system.today();
+            ateu.SegmentDistanceUnit = 'Miles';
 
             // Scope3EmssnSrcId = scope 3 emission source
             Scope3EmssnSrc s3es;
@@ -27,7 +28,7 @@ public with sharing class AirTravelEnergyUseRecordCreator {
             // air travel emission factor
             AirTravelEmssnFctr atef;
             atef = [SELECT Name FROM AirTravelEmssnFctr
-            WHERE Name='test'
+            WHERE Name='Air Travel Factors - US EPA 2018'
             LIMIT 1];
             ateu.AirTravelEmssnFctrId = atef.Id;
 

@@ -1,0 +1,27 @@
+@startuml
+skinparam sequenceMessageAlign right
+
+"Uploader UI" -> "Upload Handler"  : Handle file
+group Upload and analyze file submitted
+"Upload Handler" -> "File Uploader" : Upload File
+"File Uploader" -> "AWS Apex Uploader" : Pass file
+"AWS Apex Uploader" -> "AWS" : Send file
+"AWS" -> "AWS Apex Uploader" : File Analysis results
+"AWS Apex Uploader" -> "File Uploader" : Results 
+"File Uploader" -> "Upload Handler" : Results
+end
+group Visualize Results
+"Upload Handler" -> "Uploader Modal UI" : Display results
+alt One solution found
+"Uploader Modal UI" -> "Result Displayer" : Recap results
+else More solutions found
+"Uploader Modal UI" -> "Location Checker" : Sort location
+"Location Checker" -> "AWS Region Checker": Analyze locations
+"AWS Region Checker" -> "Location Checker" : Locations sorted
+"Location Checker" -> "Uploader Modal UI" : Display results
+end
+"Uploader Modal UI" -> "Record Creator" : Create record
+"Record Creator" -> "Uploader Modal UI" : Record created
+end
+"Uploader Modal UI" -> "Uploader UI" : Back to home
+@enduml

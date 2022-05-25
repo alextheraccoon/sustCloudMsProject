@@ -216,14 +216,7 @@ public with sharing class AWSFileUploadController {
         return results;
     }
 
-    // //This method inserts file information to Custom Attachment object
-    // public static void insertAttachmentRecord (Id parentId, String fileName, String fileURL){
-    //     Attachment__c attachment = new Attachment__c();
-    //     attachment.Opportunity__c = parentId;
-    //     attachment.FileURL__c = fileURL;
-    //     attachment.File_Name__c =  fileName;
-    //     insert attachment;                                           
-    // }
+    
 
     //This method retrieves Attachment record based on OpportunityId
     @AuraEnabled

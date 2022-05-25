@@ -1,0 +1,207 @@
+@startuml "Logic and deployment view"
+
+cloud "Amazon Web Services" {
+    cloud "S3" {
+        interface " " as bu_i
+        [Bucket] - bu_i
+    }
+    cloud "Lambda" {
+        frame "Main Lambda" {
+            interface " " as doc_ai
+            interface " " as pai
+            interface " " as iai
+            [Document Analyzer] - doc_ai
+            [PDF Analyzer] - pai
+            [Image Analyzer] - iai
+            [Key-Value Analyzer] - kv_ai
+            [Raw text Analyzer] - rt_ai
+            [Document Analyzer] --( bu_i : get_document
+            [Document Analyzer] --( pai : analyze_pdf
+            [Document Analyzer] --( iai : analyze_image
+            [Image Analyzer] --( kv_ai : find_key_value
+            [Image Analyzer] --( rt_ai : find raw_text
+            [PDF Analyzer] --( rt_ai : : find raw_text
+
+        }
+        frame "Find Distance Lambda" {
+            interface " " as dci
+            interface " " as kv_dist_i
+            interface " " as rt_dist_i
+            [Key-Value Distance] - kv_dist_i
+            [Raw text Distance] - rt_dist_i
+            [Distance Calculator] - dci
+            [Distance Calculator] --( kv_dist_i : find_distance_key_value
+            [Distance Calculator] --( rt_dist_i : find_distance_raw_text
+            [Key-Value Analyzer] --( dci : find_key_value_distance
+            [Raw text Analyzer] --( dci : find_raw_text_distance
+            [Distance Calculator] --( bu_i : get_airports_codes
+
+        }
+        frame "Async Analysis Lambda" {
+            interface " " as async_ai
+            [Async Analyzer] - async_ai
+            [PDF Analyzer] --( async_ai : async_analysis
+            interface " " as js_i
+            interface " " as rf_i
+            [Job Starter] - js_i
+            [Results Finder] - rf_i
+            [Async Analyzer] --( js_i : start_analysis
+            [Async Analyzer] --( rf_i : get_analysis_results
+            
+        }
+        frame "Region Checker" {
+            interface " " as lm_i
+            [Locations Manager] - lm_i
+            [Locations Manager] - bu_i
+            
+        }
+        frame "Object Deleter" {
+            interface " " as obj_del
+            [Object Deleter] - obj_del
+            [Object Deleter] --( bu_i : delete_object
+        }
+        frame "PDF Splitter" {
+            interface " " as pdf_sp_i
+            [PDF Splitter] - pdf_sp_i
+            [PDF Splitter] --( bu_i : get_document
+        }
+
+    }
+    cloud "Rest API" {
+        interface " " as ld_api_i
+        [Lambda API] - ld_api_i
+        [Document Analyzer] --( ld_api_i : expose_lambda
+        [Object Deleter] --( ld_api_i : expose_lambda
+        [PDF Splitter]  --( ld_api_i : expose_lambda
+        [Locations Manager] --( ld_api_i : expose_lambda
+
+    }
+    cloud "Amazon Translate" {
+        interface " " as trans_i
+        [Translator] - trans_i
+        [Key-Value Analyzer] --( trans_i : translate_key_value
+        [Raw text Distance] --( trans_i : translate raw_text
+        
+    }
+    cloud "Amazon Location Service" {
+        interface " " as loc_i
+        [Location Service] - loc_i
+        [Key-Value Distance] --( loc_i : find_places_from_key_value
+        [Raw text Distance] --( loc_i : find_places_from_raw_text
+        [Locations Manager] --( loc_i : find_place_location
+    }
+    cloud "Amazon SQS" {
+        interface " " as sqs_i
+        [Simple Queue Service] - sqs_i
+        [Job Starter] --( sqs_i : create_topic
+        [Results Finder] --( sqs_i : check_results / delete_topic
+    }
+    cloud "Amazon SNS" {
+        interface " " as sns_i
+        [Simple Notification Service] - sns_i
+        [Job Starter] --( sns_i : create_queue 
+        [Results Finder] --( sns_i : check_results / delete_queue
+    }
+    cloud "Textract" {
+        interface " " as text_ser_i
+        [Textract service] - text_ser_i
+        [Key-Value Analyzer] --( text_ser_i : key_value_analysis
+        [Raw text Analyzer] --( text_ser_i : raw_text_analysis
+        [Job Starter] --( text_ser_i : start_analysis
+        [Results Finder] --( text_ser_i : get_analysis_results
+    }
+}
+cloud "Salesforce" {
+  cloud "Salesforce Platform" {
+      cloud "Trip Tracker"{
+        
+        interface " " as tsi
+        interface " " as hi
+        interface " " as edi
+        interface " " as mdi
+        
+        [User Interface] 
+        [Tab Switcher] - tsi
+        [Default Home] - hi
+        [Manager Dashboard] - mdi
+        [Employee Dashboard] - edi
+        
+        frame "Air Travel Creator" {
+            interface " " as awsi
+            interface " " as ateuci
+            interface " " as atm_i
+            [AWS Uploader] --( bu_i : upload_file
+            [AWS Uploader] - awsi
+            [Air Travel Modal] - atm_i
+            [Air Travel Energy Use Creator] - ateuci
+            [AWS Uploader] --( doc_ai : analyze_document
+            [AWS Uploader] --( atm_i : show_travel_detail
+            [Air Travel Modal] --( lm_i : order_locations
+            [Air Travel Modal] --( ateuci : create_record
+            [Air Travel Modal] --( obj_del : delete_document
+            [AWS Uploader] --( pdf_sp_i : split_pdf
+        }
+
+        frame "Ground Travel Creator" {
+            interface " " as gteuci
+            [Ground Travel Energy Use Creator] - gteuci
+
+        }
+        [User Interface] --( hi : visualize
+        [User Interface] --( tsi : visualize
+        [Tab Switcher] --( mdi : visualize
+        [Tab Switcher] --( edi : visualize
+        [Tab Switcher] --( hi : visualize
+        [Tab Switcher] --( awsi : report_emissions
+        [Tab Switcher] --( gteuci : report_emissions
+        
+       } 
+        cloud "Salesforce Database" {
+            interface " " as dbi
+            [Database] - dbi
+        
+        }
+        cloud "Tableau" {
+            interface " " as ai
+            interface " " as di
+            interface " " as wi
+            
+            [App] - ai
+            [Dashboard] - di
+            [Widget] - wi
+           
+            [App] --( di : load_dashboard
+            [Dashboard] --( wi : load_graphs
+            
+        }
+    interface " " as dbl_i
+    [Database loader] --( dbi : load_data
+    [Database loader] - dbl_i
+    [Widget] --( dbl_i : query_data
+
+    cloud "Net Zero Cloud"{
+        interface " " as nzc_i
+        [NZC App] - nzc_i
+        note left of [NZC App]
+            Objects:
+            Air Travel Energy Use 
+            Ground Travel Energy Use 
+            Air Travel Emission Factors
+            Ground Travel Emission Factors
+            Scope 3 Carbon Footprint
+            Scope 3 Emission source
+        end note
+        [Air Travel Energy Use Creator] --( nzc_i : use_objects
+        [Ground Travel Energy Use Creator] --( nzc_i : use_objects
+        [NZC App] --( dbl_i : load_data / save_data
+    }  
+
+    [Manager Dashboard] --( ai : load_app
+    [Employee Dashboard] --( ai : load_app
+    [Default Home] --( ai : load_app
+  }
+}
+
+
+
+@enduml

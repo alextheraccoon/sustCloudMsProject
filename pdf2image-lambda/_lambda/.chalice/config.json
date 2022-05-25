@@ -1,0 +1,16 @@
+{
+  "version": "2.0",
+  "app_name": "_lambda",
+  "stages": {
+    "dev": {
+      "api_gateway_stage": "api",
+      "environment_variables": {
+        "ORIGIN_BUCKET": "amazontextractbucket",
+        "DEST_BUCKET": "amazontextractbucket",
+        "REGION": "eu-central-1",
+        "FMT": "jpeg",
+        "DPI": "300"
+     }
+    }
+  }
+}

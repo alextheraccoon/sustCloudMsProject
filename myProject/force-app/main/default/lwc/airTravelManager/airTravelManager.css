@@ -1,0 +1,43 @@
+
+.lgc-bg-inverse {
+    background-color: rgb(22, 50, 92);
+}
+
+.button-menu {
+    align-items: center;
+    display: flex;
+    font-size: 1rem;
+    line-height: 1.25;
+    margin: 0px;
+    width: 500px;
+    padding: 10px;
+    border-color: rgb(169, 165, 165);
+    
+}
+
+.dropdown{
+    max-height: 200px;
+}
+
+.dropdown-value {
+    padding-left: 10px;
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+.buttons-container {
+    display: flex;
+    align-items: center;
+}
+
+.modal-value {
+    font-size: 1rem;
+    line-height: 1.25;
+    color: rgb(27, 26, 26);
+    margin-left: 20px;
+}
+
+.modal-text {
+    color: rgb(27, 26, 26);
+    font-size: 1rem;
+}

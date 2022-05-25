@@ -5,7 +5,7 @@
             style="width:30rem"    icon-name="custom:custom14"> 
         <div style="margin-left:5%">
             <div>
-                <lightning-input label="" name="file to uploder" onchange={handleSelectedFiles} 
+                <lightning-input label="" name="" onchange={handleSelectedFiles} 
                     type="file" multiple></lightning-input>
             </div><br/>            
             <div class="slds-text-body_small">{fileName}
@@ -19,7 +19,8 @@
                     variant="brand">
                 </lightning-button>
             </div>
-        </div><br/><br/>
+        </div>
+        <br/><br/>
 
         <c-util-modal 
             show-modal={showModal} 
@@ -44,8 +45,40 @@
                         <p>
                             <span class="modal-text">Distance: </span> 
                             <b><lightning-formatted-number value={distance} maximum-fraction-digits="2" class="modal-value"></lightning-formatted-number></b>
-                            <span class="modal-text"> km total</span>
+                            <span class="modal-text"> miles total</span>
                         </p> 
+                        <p style="height: 20px;">  </p>
+                        <div class="wrong-trip">
+                            <lightning-button class="slds-m-top--medium" label="Wrong trip detected" onclick={correctTrip} 
+                            variant="brand">
+                            </lightning-button>
+                            <template if:true={wrongTrip}>
+                                
+                                <p style="height: 20px;">  </p>
+                                <div class="airports_selection">
+                                    <div class="dropdown">
+                                        <lightning-input  type="search" label="Search Departure Airport Name" onchange={searchDeparture} value={dep_airportName} ></lightning-input>
+                                        <select class="slds-select" onchange={handleGetSelectedDeparture}>
+                                            <template for:each={airportList_dep} for:item="accObj" for:index="index">
+                                                <option key={accObj.Id} class="uiInputSelectOption">{accObj.Name}</option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <p style="height: 20px;">  </p>
+                                    <div class="dropdown">
+                                        <lightning-input  type="search" label="Search Arrival Airport Name" onchange={searchArrival} value={arr_airportName} ></lightning-input>
+                                        <select class="slds-select" onchange={handleGetSelectedArrival}>
+                                            <template for:each={airportList_arr} for:item="accObj" for:index="index">
+                                                <option key={accObj.Id} class="uiInputSelectOption">{accObj.Name}</option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <p style="height: 20px;">  </p>
+                                </div>
+                                
+                            </template>
+                        </div>
+                        
                         <p style="height: 20px;">  </p>
                     </div>
                 </template>
@@ -121,7 +154,7 @@
 
 
         <!--displaying uploaded files-->
-        <template if:true={tableData}>
+        <!-- <template if:true={tableData}>
             <lightning-card title="Following files uploaded:">
                 <div style="width: auto;">                    
                     <ul class="slds-m-around_small">
@@ -134,7 +167,7 @@
                     </ul>                    
                 </div>
             </lightning-card>
-        </template>
+        </template> -->
     </lightning-card>
     </article>
 </template>

@@ -1,0 +1,46 @@
+@startuml
+skinparam sequenceMessageAlign right
+
+"Air Travel Manager" -> "AWSFileUploadController": pass the file to the apex class
+"AWSFileUploadController" -> "AWS S3 Service": upload file on S3 bucket
+"AWS S3 Service" -> "AWSFileUploadController": file uploaded
+"AWSFileUploadController" -> "AWS Lambda": start analysis of file
+alt Image Document
+"AWS Lambda" -> "AWSFileUploadController" : return analysis result
+else PDF Document
+"AWS Lambda" -> "AWSFileUploadController" : return task and job id analysis
+"AWSFileUploadController" -> "AWS Lambda" : check job is finished
+alt Apex Timeout
+"AWSFileUploadController" -> "AWSFileUploadController" : process timeout
+"AWSFileUploadController" -> "AWS Lambda" : split pdf into images and analyze 
+"AWS Lambda" -> "AWSFileUploadController" : return analysis result
+else Process finishes
+"AWS Lambda" -> "AWSFileUploadController": return analysis result
+end
+end
+"AWSFileUploadController" -> "AWS S3 Service": delete documents uploaded
+"AWS S3 Service" -> "AWSFileUploadController" : documents deleted
+"AWSFileUploadController" -> "Air Travel Manager" : visualize results
+alt One solution found
+"Air Travel Manager" -> "Air Travel Manager" : display results
+else Multiple solutions found
+"Air Travel Manager" -> "IsSameRegion" : sort locations based on user location
+"IsSameRegion" -> "AWS Lambda": sort locations
+"AWS Lambda" -> "IsSameRegion": return results
+"IsSameRegion" -> "Air Travel Manager" : list locations sorted
+end
+group Wrong Trip Detected
+"Air Travel Manager" -> "AirportController" : wrong trip detected
+"AirportController" -> "Salesforce db" : query airports list
+"Salesforce db" -> "AirportController" : retrieve airports list
+"AirportController" -> "Air Travel Manager" : options visualized
+"Air Travel Manager" -> "AirportController" : compute new distance
+"AirportController" -> "Air Travel Manager" : return new distance
+end
+group Create Record
+"Air Travel Manager" -> "AirTravelEnergyUseRecordCreator" : create new air travel energy use record
+"AirTravelEnergyUseRecordCreator" -> "Salesforce DB" : create record
+"Salesforce DB" -> "AirTravelEnergyUseRecordCreator" : record created
+"AirTravelEnergyUseRecordCreator" -> "Air Travel Manager": record created
+end
+@enduml

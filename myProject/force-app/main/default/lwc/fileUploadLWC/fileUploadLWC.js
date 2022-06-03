@@ -20,12 +20,17 @@ export default class fileUploadLWC extends LightningElement {
     @track distance;
     @track startPoint = "";
     @track endPoint = "";
-    @track possibleRoutes;
+    @track possibleRoutes = [];
     @track all_airports = []
     @track more_options = false;
     @track returnTrip = false;
     @track analyzedAirports = [];
     @track wrongTrip = false;
+
+    @track airportList_dep= [];
+    @track dep_airportName = "";
+    @track airportList_arr= [];
+    @track arr_airportName = "";
 
 
     file; //holding file instance
@@ -36,6 +41,77 @@ export default class fileUploadLWC extends LightningElement {
     responseData;
     selectedDepartureValue = "";
     selectedDestinationValue = "";
+
+    // handle creation of new trip from scratch
+    
+    @wire (retrieveAirports,{input:'$dep_airportName'})
+    retrieveDep({error, data}){
+        if(data){
+            this.airportList_dep=data;          
+        }
+        else if(error){
+
+        } 
+    }
+    
+    @wire (retrieveAirports,{input:'$arr_airportName'})
+    retrieveArr({error, data}){
+        if(data){
+            this.airportList_arr=data;          
+        }
+        else if(error){
+
+        } 
+    }
+    dep_lat = 0
+    dep_lon = 0
+    arr_lat = 0
+    arr_lon = 0
+    handleGetSelectedDeparture(event){
+        console.log(event.target.value);
+        this.dep_airportName = event.target.value;
+        findCoords({name: this.dep_airportName}).then(result => {
+            console.log(result)
+            
+            let x = result.split(',');
+            this.dep_lat = parseFloat(x[0])
+            this.dep_lon = parseFloat(x[1])
+            // console.log(lat)
+            // console.log(lon)
+        })
+        
+    }
+    handleGetSelectedArrival(event){
+        console.log(event.target.value);
+        this.arr_airportName = event.target.value;
+        findCoords({name: this.arr_airportName}).then(result => {
+            console.log(result)
+            
+            let x = result.split(',');
+            this.arr_lat = parseFloat(x[0])
+            this.arr_lon = parseFloat(x[1])
+            // console.log(lat)
+            // console.log(lon)
+        })
+    }
+
+    searchDeparture(event) {
+        // this.searchValue = event.target.value;
+        const searchString = event.target.value;
+        window.clearTimeout(this.delayTimeout);
+        this.delayTimeout = setTimeout(() => {
+            this.dep_airportName = searchString; 
+        }, DELAY);
+    }
+
+    searchArrival(event) {
+        // this.searchValue = event.target.value;
+        const searchString = event.target.value;
+        window.clearTimeout(this.delayTimeout);
+        this.delayTimeout = setTimeout(() => {
+            this.arr_airportName = searchString; 
+        }, DELAY);
+    }
     
 
     handleOnselectDeparture(event) {
@@ -136,64 +212,100 @@ export default class fileUploadLWC extends LightningElement {
         });
 
     }
-
+    @track error_message = "Please select the missing fields"
+    @track show_error_message = false;
     closeModal() {
-        this.showModal = false;
+        
         this.showSpinner = true;
         if (this.more_options == true) {
-            // handle multiple choice
-            if (this.selectedDepartureValue != "" && this.selectedDestinationValue != ""){
+            try {
+                // handle multiple choice
+                if (this.selectedDepartureValue != "" && this.selectedDestinationValue != ""){
+                    
+                    let points = [this.selectedDepartureValue, this.selectedDestinationValue];
                 
-                let points = [this.selectedDepartureValue, this.selectedDestinationValue];
-            
-                if (this.more_options == true) {
+                    if (this.more_options == true) {
 
-                    for (let i = 0; i < this.possibleRoutes.length ; ++i){
-                        if (JSON.stringify(this.possibleRoutes[i][1]) === JSON.stringify(points)){
-                            this.distance = this.possibleRoutes[i][0]
+                        for (let i = 0; i < this.possibleRoutes.length ; ++i){
+                            if (JSON.stringify(this.possibleRoutes[i][1]) === JSON.stringify(points)){
+                                this.distance = this.possibleRoutes[i][0]
+                            }
                         }
                     }
-                }
 
-                window.console.log("return variable " + this.returnTrip)
-                // add return trip
-                this.createEnergyUseRecord();
-                if (this.returnTrip == true) {
-                    this.createEnergyUseRecord();
+                    window.console.log("return variable " + this.returnTrip)
+                    // add return trip
+                    if (this.wrongTrip == false){
+                        this.createEnergyUseRecord();
+                        if (this.returnTrip == true) {
+                            this.createEnergyUseRecord();
+                        }
+                        this.showModal = false;
+                    } else {
+                        if (this.dep_airportName != "" && this.arr_airportName != ""){
+                            this.distance = this.findDistance(this.dep_lon, this.dep_lat, this.arr_lon, this.arr_lat)
+                            this.createEnergyUseRecord();
+                            this.show_error_message = false
+                            // add return trip
+                            if (this.returnTrip == true) {
+                                this.createEnergyUseRecord();
+                            }
+                            this.showModal = false;
+                            this.wrongTrip = false;
+                            airportList_dep= [];
+                            dep_airportName = "";
+                            airportList_arr= [];
+                            arr_airportName = "";
+                        } else {
+                            this.show_error_message = true
+                        }
+                    }
+                    
+                    this.more_options = false;
+                    this.selectedDepartureValue = "";
+                    this.selectedDestinationValue = "";
+                    this.all_airports = [];
+                    this.analyzedAirports = [];
+                    this.show_error_message = false;
+                } else {
+                    this.show_error_message = true;
                 }
-                this.more_options = false;
-                this.selectedDepartureValue = "";
-                this.selectedDestinationValue = "";
-                this.all_airports = [];
-                this.analyzedAirports = [];
-
-            } else {
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: 'Please select your departure and destination point',
-                        message: "Could not crate any record",
-                        variant: 'error',
-                    }),
-                );
+            } catch (error) {
+                console.log(error)
             }
         } else {
-            if (this.wrongTrip == true){
-                this.distance = this.findDistance(this.dep_lon, this.dep_lat, this.arr_lon, this.arr_lat)
-            }
-            if (this.startPoint != "" && this.endPoint != ""){
-                // add return trip
-                this.createEnergyUseRecord();
-                if (this.returnTrip == true) {
+            try {
+                if (this.wrongTrip == true){
+                    
+                    if (this.dep_airportName != "" && this.arr_airportName != ""){
+                        this.distance = this.findDistance(this.dep_lon, this.dep_lat, this.arr_lon, this.arr_lat)
+                        this.createEnergyUseRecord();
+                        this.show_error_message = false
+                        // add return trip
+                        if (this.returnTrip == true) {
+                            this.createEnergyUseRecord();
+                        }
+                        this.showModal = false;
+                        this.wrongTrip = false;
+                        airportList_dep= [];
+                        dep_airportName = "";
+                        airportList_arr= [];
+                        arr_airportName = "";
+                    } else {
+                        this.show_error_message = true
+                    }
+                } else if (this.startPoint != "" && this.endPoint != ""){
+                    // add return trip
                     this.createEnergyUseRecord();
+                    if (this.returnTrip == true) {
+                        this.createEnergyUseRecord();
+                    }
+                    this.showModal = false;
+                } else {
+                    this.show_error_message = true
                 }
-            } else {
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: 'Could not recognize any start or end point',
-                        message: "Could not crate any record",
-                        variant: 'error',
-                    }),
-                );
+            } catch (error) {
+                console.log(error)
             }
         }
     }
@@ -214,79 +326,6 @@ export default class fileUploadLWC extends LightningElement {
 
     correctTrip() {
         this.wrongTrip = true;
-    }
-
-    // handle creation of new trip from scratch
-    @track airportList_dep= [];
-    @track dep_airportName = "";
-    @wire (retrieveAirports,{input:'$dep_airportName'})
-    retrieveDep({error, data}){
-        if(data){
-            this.airportList_dep=data;          
-        }
-        else if(error){
-
-        } 
-    }
-    @track airportList_arr= [];
-    @track arr_airportName = "";
-    @wire (retrieveAirports,{input:'$arr_airportName'})
-    retrieveArr({error, data}){
-        if(data){
-            this.airportList_arr=data;          
-        }
-        else if(error){
-
-        } 
-    }
-    dep_lat = 0
-    dep_lon = 0
-    arr_lat = 0
-    arr_lon = 0
-    handleGetSelectedDeparture(event){
-        console.log(event.target.value);
-        this.dep_airportName = event.target.value;
-        findCoords({name: this.dep_airportName}).then(result => {
-            console.log(result)
-            
-            let x = result.split(',');
-            this.dep_lat = parseFloat(x[0])
-            this.dep_lon = parseFloat(x[1])
-            console.log(lat)
-            console.log(lon)
-        })
-        
-    }
-    handleGetSelectedArrival(event){
-        console.log(event.target.value);
-        this.arr_airportName = event.target.value;
-        findCoords({name: this.arr_airportName}).then(result => {
-            console.log(result)
-            
-            let x = result.split(',');
-            this.arr_lat = parseFloat(x[0])
-            this.arr_lon = parseFloat(x[1])
-            console.log(lat)
-            console.log(lon)
-        })
-    }
-
-    searchDeparture(event) {
-        // this.searchValue = event.target.value;
-        const searchString = event.target.value;
-        window.clearTimeout(this.delayTimeout);
-        this.delayTimeout = setTimeout(() => {
-            this.dep_airportName = searchString; 
-        }, DELAY);
-    }
-
-    searchArrival(event) {
-        // this.searchValue = event.target.value;
-        const searchString = event.target.value;
-        window.clearTimeout(this.delayTimeout);
-        this.delayTimeout = setTimeout(() => {
-            this.arr_airportName = searchString; 
-        }, DELAY);
     }
 
     findDistance(y1,x1, y2,x2){
@@ -410,3 +449,9 @@ export default class fileUploadLWC extends LightningElement {
         });
     }
 }
+
+
+// -- (SUM(travel_count)) AS "travel_c", (SUM(travel_emissions)) AS "emissions", (SUM(avg_emission)) AS "avg"
+// -- FROM (
+// -- UNION ALL
+// -- SELECT COUNT(*) as "travel_count", SUM("Scope3EmissionsInTco2e") AS "travel_emissions", SUM("Scope3EmissionsInTco2e")/COUNT(*) as "avg_emission" FROM "TravelEnergyUse") 

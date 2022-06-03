@@ -225,27 +225,3 @@ public with sharing class AWSFileUploadController {
                 WHERE Opportunity__c =:parentId];
     }
 }
-
-
-// HttpRequest request = new HttpRequest();
-// String endpoint = 'https://0oinlpnzq4.execute-api.eu-central-1.amazonaws.com/api/emiratesTicket.pdf';
-// request.setEndpoint(endpoint);
-// request.setMethod('GET');
-// request.setTimeout(120000);
-// Http http = new Http();
-// HttpResponse response = http.send(request);
-// System.debug('Lambda Resp:' + response.getBody());
-// JSONParser parser = JSON.createParser(response.getBody());
-// while (parser.nextToken() != null) {
-//     // Start at the array of invoices.
-//     if (parser.getCurrentToken() == JSONToken.START_ARRAY) {
-//         while (parser.nextToken() != null) {
-//             if (parser.getCurrentToken() != JSONToken.END_ARRAY && parser.getCurrentToken() != JSONToken.END_OBJECT){
-//                 String image = parser.getText();
-                
-//             	system.debug('Image url ' + image.substring(59,image.length()));
-//             }
-            
-//         }
-//     }
-// }

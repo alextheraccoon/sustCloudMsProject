@@ -48,11 +48,24 @@ export default class AirTravelManager extends LightningElement {
         this.showSpinner = true;
         this.distance = this.findDistance(this.dep_lon, this.dep_lat, this.arr_lon, this.arr_lat)
         try {
-            this.createEnergyUseRecord();
-            // add return trip
-            if (this.returnTrip == true) {
+            if (dep_airportName != "" && this.arr_airportName != ""){
                 this.createEnergyUseRecord();
+                // add return trip
+                if (this.returnTrip == true) {
+                    this.createEnergyUseRecord();
+                }
+            } else {
+                
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Please select the two locations',
+                        message: "Could not crate any record",
+                        variant: 'error',
+                    }),
+                );
+                
             }
+            
         } catch {
             this.dispatchEvent(
                 new ShowToastEvent({

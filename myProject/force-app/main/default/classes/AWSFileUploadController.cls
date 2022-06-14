@@ -168,8 +168,6 @@ public with sharing class AWSFileUploadController {
         String format = tokens[1];
         filename = name + '.' + format;      
         //AWS specific information
-        // String key = 'AKIA2PFLXDGXCWQQXBEK'; //AWS key
-        // String secret = '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'; //AWS Secret key
         String bucketname = 'amazontextractbucket'; //AWS bucket name
         String host = 's3.eu-central-1.amazonaws.com'; //'s3.amazonaws.com:443'
         // awsexamplebucket1.us-west-1.s3.amazonaws.com
